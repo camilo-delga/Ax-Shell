@@ -46,10 +46,15 @@ stdenv.mkDerivation {
     runHook preInstall;
     mkdir -p $out/share/ax-shell
     cp -r ./* $out/share/ax-shell/
-    makeWrapper ${ax-shell-python}/bin/python $out/bin/.ax-shell-unwrapped \
-      --prefix PYTHONPATH : "$out/share/ax-shell" \
-      --prefix PATH : "${ax-shell-python}/bin" \
-      --add-flags "-m main"
+    
+    # Crear un script Python directo sin wrapper intermedio
+    cat > $out/bin/.ax-shell-unwrapped << 'SCRIPT'
+#!/bin/sh
+cd ${placeholder "out"}/share/ax-shell
+exec ${ax-shell-python}/bin/python -m main "$@"
+SCRIPT
+    chmod +x $out/bin/.ax-shell-unwrapped
+    
     runHook postInstall;
   '';
 
