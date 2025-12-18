@@ -45,13 +45,14 @@ stdenv.mkDerivation {
   installPhase = ''
     runHook preInstall;
     mkdir -p $out/share/ax-shell
+    mkdir -p $out/bin
     cp -r ./* $out/share/ax-shell/
     
-    # Crear un script Python directo sin wrapper intermedio
-    cat > $out/bin/.ax-shell-unwrapped << 'SCRIPT'
+    # Crear script directo
+    cat > $out/bin/.ax-shell-unwrapped <<SCRIPT
 #!/bin/sh
-cd ${placeholder "out"}/share/ax-shell
-exec ${ax-shell-python}/bin/python -m main "$@"
+cd $out/share/ax-shell
+exec ${ax-shell-python}/bin/python -m main "\$@"
 SCRIPT
     chmod +x $out/bin/.ax-shell-unwrapped
     
@@ -59,8 +60,8 @@ SCRIPT
   '';
 
   preFixup = ''
-    gappsWrapperArgs+=(--set AX_SHELL_WALLPAPERS_DIR_DEFAULT "${placeholder "out"}/share/ax-shell/assets/wallpapers_example")
-    gappsWrapperArgs+=(--set FABRIC_CSS_PATH "${placeholder "out"}/share/ax-shell/main.css")
+    gappsWrapperArgs+=(--set AX_SHELL_WALLPAPERS_DIR_DEFAULT "$out/share/ax-shell/assets/wallpapers_example")
+    gappsWrapperArgs+=(--set FABRIC_CSS_PATH "$out/share/ax-shell/main.css")
     gappsWrapperArgs+=(--prefix PATH : "${lib.makeBinPath runtimeDeps}")
     gappsWrapperArgs+=(--prefix XDG_DATA_DIRS : "${tabler-icons-font}/share")
     gappsWrapperArgs+=(--prefix XDG_DATA_DIRS : "${adwaita-icon-theme}/share")
