@@ -74,6 +74,10 @@
                 pkg-config
               ]);
               propagatedBuildInputs = [
+              pkgs.glib
+              pkgs.gtk3
+              pkgs.gtk4
+              pkgs.gobject-introspection
                 ps_.click
                 ps_.loguru
                 ps_.pycairo
