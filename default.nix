@@ -6,7 +6,7 @@
   runtimeDeps,
   wrapGAppsHook3,
   pkg-config,
-  makeWrapper,
+  writeShellScript,
   gtk3,
   gtk4,
   glib,
@@ -19,13 +19,19 @@
   tabler-icons-font,
 }:
 
+let
+  ax-shell-unwrapped = writeShellScript "ax-shell-unwrapped" ''
+    cd ${placeholder "out"}/share/ax-shell
+    exec ${ax-shell-python}/bin/python -m main "$@"
+  '';
+in
 stdenv.mkDerivation {
   pname = "ax-shell";
   version = "unstable-${self.shortRev or "dirty"}";
 
   src = self;
 
-  nativeBuildInputs = [ wrapGAppsHook3 pkg-config makeWrapper ];
+  nativeBuildInputs = [ wrapGAppsHook3 pkg-config ];
   
   buildInputs = [ 
     ax-shell-python 
@@ -47,15 +53,8 @@ stdenv.mkDerivation {
     mkdir -p $out/share/ax-shell
     mkdir -p $out/bin
     cp -r ./* $out/share/ax-shell/
-    
-    # Crear script directo
-    cat > $out/bin/.ax-shell-unwrapped <<SCRIPT
-#!/bin/sh
-cd $out/share/ax-shell
-exec ${ax-shell-python}/bin/python -m main "\$@"
-SCRIPT
+    cp ${ax-shell-unwrapped} $out/bin/.ax-shell-unwrapped
     chmod +x $out/bin/.ax-shell-unwrapped
-    
     runHook postInstall;
   '';
 
