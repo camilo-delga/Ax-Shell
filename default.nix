@@ -41,28 +41,29 @@ stdenv.mkDerivation {
   ] ++ runtimeDeps;
 
   dontWrapQtApps = true;
-  dontWrapGApps = true;
 
   installPhase = ''
     runHook preInstall;
     mkdir -p $out/share/ax-shell
     cp -r ./* $out/share/ax-shell/
-    makeWrapper ${ax-shell-python}/bin/python $out/bin/ax-shell \
+    makeWrapper ${ax-shell-python}/bin/python $out/bin/.ax-shell-unwrapped \
       --prefix PYTHONPATH : "$out/share/ax-shell" \
       --prefix PATH : "${ax-shell-python}/bin" \
-      --prefix GI_TYPELIB_PATH : "${glib.out}/lib/girepository-1.0:${gtk3}/lib/girepository-1.0:${gtk4}/lib/girepository-1.0:${gobject-introspection}/lib/girepository-1.0:${pango}/lib/girepository-1.0:${gdk-pixbuf}/lib/girepository-1.0:${cairo}/lib/girepository-1.0:${harfbuzz}/lib/girepository-1.0" \
       --add-flags "-m main"
     runHook postInstall;
   '';
 
   preFixup = ''
-    gappsWrapperArgs+=(--set AX_SHELL_WALLPAPERS_DIR_DEFAULT "${placeholder "out"}/share/ax-shell/assets/wallpapers_example");
-    gappsWrapperArgs+=(--set FABRIC_CSS_PATH "${placeholder "out"}/share/ax-shell/main.css");
-    gappsWrapperArgs+=(--prefix PATH : "${lib.makeBinPath runtimeDeps}");
-    gappsWrapperArgs+=(--prefix XDG_DATA_DIRS : "${tabler-icons-font}/share");
-    gappsWrapperArgs+=(--prefix XDG_DATA_DIRS : "${adwaita-icon-theme}/share");
-    
-    wrapGAppsHook
+    gappsWrapperArgs+=(--set AX_SHELL_WALLPAPERS_DIR_DEFAULT "${placeholder "out"}/share/ax-shell/assets/wallpapers_example")
+    gappsWrapperArgs+=(--set FABRIC_CSS_PATH "${placeholder "out"}/share/ax-shell/main.css")
+    gappsWrapperArgs+=(--prefix PATH : "${lib.makeBinPath runtimeDeps}")
+    gappsWrapperArgs+=(--prefix XDG_DATA_DIRS : "${tabler-icons-font}/share")
+    gappsWrapperArgs+=(--prefix XDG_DATA_DIRS : "${adwaita-icon-theme}/share")
+  '';
+  
+  postFixup = ''
+    wrapGApp $out/bin/.ax-shell-unwrapped
+    mv $out/bin/.ax-shell-unwrapped $out/bin/ax-shell
   '';
 
   meta = {
