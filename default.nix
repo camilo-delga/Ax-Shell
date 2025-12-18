@@ -11,6 +11,10 @@
   gtk4,
   glib,
   gobject-introspection,
+  pango,
+  gdk-pixbuf,
+  cairo,
+  harfbuzz,
   adwaita-icon-theme,
   tabler-icons-font,
 }:
@@ -30,10 +34,14 @@ stdenv.mkDerivation {
     gtk4
     glib
     gobject-introspection
+    pango
+    gdk-pixbuf
+    cairo
+    harfbuzz
   ] ++ runtimeDeps;
 
   dontWrapQtApps = true;
-  dontWrapGApps = true;  # Deshabilitamos el autowrap porque usamos makeWrapper manualmente
+  dontWrapGApps = true;
 
   installPhase = ''
     runHook preInstall;
@@ -42,7 +50,7 @@ stdenv.mkDerivation {
     makeWrapper ${ax-shell-python}/bin/python $out/bin/ax-shell \
       --prefix PYTHONPATH : "$out/share/ax-shell" \
       --prefix PATH : "${ax-shell-python}/bin" \
-      --prefix GI_TYPELIB_PATH : "${glib.out}/lib/girepository-1.0:${gtk3}/lib/girepository-1.0:${gtk4}/lib/girepository-1.0:${gobject-introspection}/lib/girepository-1.0" \
+      --prefix GI_TYPELIB_PATH : "${glib.out}/lib/girepository-1.0:${gtk3}/lib/girepository-1.0:${gtk4}/lib/girepository-1.0:${gobject-introspection}/lib/girepository-1.0:${pango}/lib/girepository-1.0:${gdk-pixbuf}/lib/girepository-1.0:${cairo}/lib/girepository-1.0:${harfbuzz}/lib/girepository-1.0" \
       --add-flags "-m main"
     runHook postInstall;
   '';
@@ -54,7 +62,6 @@ stdenv.mkDerivation {
     gappsWrapperArgs+=(--prefix XDG_DATA_DIRS : "${tabler-icons-font}/share");
     gappsWrapperArgs+=(--prefix XDG_DATA_DIRS : "${adwaita-icon-theme}/share");
     
-    # Aplicar gappsWrapperArgs al wrapper que ya creamos
     wrapGAppsHook
   '';
 
