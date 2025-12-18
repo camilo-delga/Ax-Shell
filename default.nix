@@ -8,29 +8,40 @@
   pkg-config,
   makeWrapper,
   gtk3,
+  gtk4,
+  glib,
+  gobject-introspection,
   adwaita-icon-theme,
   tabler-icons-font,
 }:
+
 stdenv.mkDerivation {
   pname = "ax-shell";
   version = "unstable-${self.shortRev or "dirty"}";
+
   src = self;
 
-  nativeBuildInputs = [ wrapGAppsHook3 pkg-config makeWrapper gtk3 ];
-  buildInputs = [ ax-shell-python tabler-icons-font ] ++ runtimeDeps;
+  nativeBuildInputs = [ wrapGAppsHook3 pkg-config makeWrapper ];
+  
+  buildInputs = [ 
+    ax-shell-python 
+    tabler-icons-font 
+    gtk3
+    gtk4
+    glib
+    gobject-introspection
+  ] ++ runtimeDeps;
+
   dontWrapQtApps = true;
 
   installPhase = ''
     runHook preInstall;
-
     mkdir -p $out/share/ax-shell
     cp -r ./* $out/share/ax-shell/
-
     makeWrapper ${ax-shell-python}/bin/python $out/bin/ax-shell \
       --prefix PYTHONPATH : "$out/share/ax-shell" \
       --prefix PATH : "${ax-shell-python}/bin" \
       --add-flags "-m main"
-
     runHook postInstall;
   '';
 
