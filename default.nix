@@ -6,6 +6,7 @@
   runtimeDeps,
   wrapGAppsHook3,
   pkg-config,
+  makeWrapper,
   gtk3,
   gtk4,
   glib,
@@ -21,58 +22,22 @@
 stdenv.mkDerivation {
   pname = "ax-shell";
   version = "unstable-${self.shortRev or "dirty"}";
-
   src = self;
-
-  nativeBuildInputs = [ wrapGAppsHook3 pkg-config ];
-  
-  buildInputs = [ 
-    ax-shell-python 
-    tabler-icons-font 
-    gtk3
-    gtk4
-    glib
-    gobject-introspection
-    pango
-    gdk-pixbuf
-    cairo
-    harfbuzz
-  ] ++ runtimeDeps;
-
+  nativeBuildInputs = [ wrapGAppsHook3 pkg-config makeWrapper ];
+  buildInputs = [ ax-shell-python tabler-icons-font gtk3 gtk4 glib gobject-introspection pango gdk-pixbuf cairo harfbuzz ] ++ runtimeDeps;
   dontWrapQtApps = true;
-
+  dontWrapGApps = true;
   installPhase = ''
-    runHook preInstall;
-    mkdir -p $out/share/ax-shell
-    mkdir -p $out/bin
+    mkdir -p $out/share/ax-shell $out/bin
     cp -r ./* $out/share/ax-shell/
-    
-    cat > $out/bin/.ax-shell-unwrapped <<EOF
-#!/bin/sh
-export PYTHONPATH="$out/share/ax-shell:\''${PYTHONPATH}"
-exec ${ax-shell-python}/bin/python -m main "\$@"
-EOF
-    chmod +x $out/bin/.ax-shell-unwrapped
-    
-    runHook postInstall;
+    makeWrapper ${ax-shell-python}/bin/python $out/bin/ax-shell \
+      --add-flags "-m main" \
+      --prefix PYTHONPATH : "$out/share/ax-shell" \
+      --prefix GI_TYPELIB_PATH : "${glib}/lib/girepository-1.0:${gtk3}/lib/girepository-1.0:${gtk4}/lib/girepository-1.0:${pango}/lib/girepository-1.0:${gdk-pixbuf}/lib/girepository-1.0:${gobject-introspection}/lib/girepository-1.0" \
+      --set AX_SHELL_WALLPAPERS_DIR_DEFAULT "$out/share/ax-shell/assets/wallpapers_example" \
+      --set FABRIC_CSS_PATH "$out/share/ax-shell/main.css" \
+      --prefix PATH : "${lib.makeBinPath runtimeDeps}" \
+      --prefix XDG_DATA_DIRS : "${tabler-icons-font}/share:${adwaita-icon-theme}/share"
   '';
-
-  preFixup = ''
-    gappsWrapperArgs+=(--set AX_SHELL_WALLPAPERS_DIR_DEFAULT "$out/share/ax-shell/assets/wallpapers_example")
-    gappsWrapperArgs+=(--set FABRIC_CSS_PATH "$out/share/ax-shell/main.css")
-    gappsWrapperArgs+=(--prefix PATH : "${lib.makeBinPath runtimeDeps}")
-    gappsWrapperArgs+=(--prefix XDG_DATA_DIRS : "${tabler-icons-font}/share")
-    gappsWrapperArgs+=(--prefix XDG_DATA_DIRS : "${adwaita-icon-theme}/share")
-  '';
-  
-  postFixup = ''
-    wrapGApp $out/bin/.ax-shell-unwrapped
-    mv $out/bin/.ax-shell-unwrapped $out/bin/ax-shell
-  '';
-
-  meta = {
-    description = "A custom, flake-based package for Ax-Shell.";
-    homepage = "https://github.com/poogas/Ax-Shell";
-    license = lib.licenses.mit;
-  };
+  meta = { description = "Ax-Shell"; homepage = "https://github.com/poogas/Ax-Shell"; license = lib.licenses.mit; };
 }
