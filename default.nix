@@ -47,11 +47,11 @@ stdenv.mkDerivation {
     mkdir -p $out/bin
     cp -r ./* $out/share/ax-shell/
     
-    cat > $out/bin/.ax-shell-unwrapped << 'UNWRAPPED'
+    cat > $out/bin/.ax-shell-unwrapped <<EOF
 #!/bin/sh
-export PYTHONPATH="$out/share/ax-shell:''${PYTHONPATH}"
-exec ${ax-shell-python}/bin/python -m main "$@"
-UNWRAPPED
+export PYTHONPATH="$out/share/ax-shell:\''${PYTHONPATH}"
+exec ${ax-shell-python}/bin/python -m main "\$@"
+EOF
     chmod +x $out/bin/.ax-shell-unwrapped
     
     runHook postInstall;
