@@ -15,6 +15,7 @@
   gdk-pixbuf,
   cairo,
   harfbuzz,
+  atk,
   adwaita-icon-theme,
   tabler-icons-font,
 }:
@@ -24,7 +25,7 @@ stdenv.mkDerivation {
   version = "unstable-${self.shortRev or "dirty"}";
   src = self;
   nativeBuildInputs = [ wrapGAppsHook3 pkg-config makeWrapper ];
-  buildInputs = [ ax-shell-python tabler-icons-font gtk3 gtk4 glib gobject-introspection pango gdk-pixbuf cairo harfbuzz ] ++ runtimeDeps;
+  buildInputs = [ ax-shell-python tabler-icons-font gtk3 gtk4 glib gobject-introspection pango gdk-pixbuf cairo harfbuzz atk ] ++ runtimeDeps;
   dontWrapQtApps = true;
   dontWrapGApps = true;
   installPhase = ''
@@ -33,7 +34,7 @@ stdenv.mkDerivation {
     makeWrapper ${ax-shell-python}/bin/python $out/bin/ax-shell \
       --add-flags "-m main" \
       --prefix PYTHONPATH : "$out/share/ax-shell" \
-      --prefix GI_TYPELIB_PATH : "${glib}/lib/girepository-1.0:${gtk3}/lib/girepository-1.0:${gtk4}/lib/girepository-1.0:${pango}/lib/girepository-1.0:${gdk-pixbuf}/lib/girepository-1.0:${gobject-introspection}/lib/girepository-1.0" \
+      --prefix GI_TYPELIB_PATH : "${lib.getLib glib}/lib/girepository-1.0:${gtk3}/lib/girepository-1.0:${gtk4}/lib/girepository-1.0:${pango.out}/lib/girepository-1.0:${gdk-pixbuf}/lib/girepository-1.0:${cairo}/lib/girepository-1.0:${harfbuzz.out}/lib/girepository-1.0:${atk}/lib/girepository-1.0:${gobject-introspection}/lib/girepository-1.0" \
       --set AX_SHELL_WALLPAPERS_DIR_DEFAULT "$out/share/ax-shell/assets/wallpapers_example" \
       --set FABRIC_CSS_PATH "$out/share/ax-shell/main.css" \
       --prefix PATH : "${lib.makeBinPath runtimeDeps}" \
